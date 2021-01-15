@@ -1,0 +1,80 @@
+---
+title: 'Task 1: Sierra Amphibians'
+author: "Michelle Shteyn"
+date: "1/15/2021"
+output: html_document
+---
+
+# Overview
+For Task 1, I will explore amphibian abundance data recorded by the Sierra Lakes Inventory Project (SLIP). I will:
+
+- Read in data in a .xlsx file
+- Do some wrangling
+- Create two visualizations and put them together in a finalized compound figure. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Attach packages
+library(tidyverse)
+library(here)
+library(janitor)
+library(readxl)
+library(patchwork)
+library(lubridate)
+```
+
+
+
+```{r, include=FALSE}
+# Read in a .xlsx file, do some wrangling
+
+frogs <- read_excel(here("data","sierra_amphibians.xlsx")) %>% 
+  mutate(survey_date = ymd(survey_date)) %>% # Convert date to a stored date class
+  mutate(year = year(survey_date)) 
+
+frogs_grouped <- frogs %>% 
+  filter(amphibian_life_stage != "EggMass") %>%  #Exclude 'Eggmass' observations
+  group_by(year, amphibian_life_stage) %>% # Group by year and life stage
+  summarize(counts = n()) #Find total counts of frogs in all life stages excluding 'EggMass'
+```
+
+## Graph 1
+
+Below, I will create a graph of total mountain yellow-legged frog (Rana muscosa) count each year across all water bodies, by life stage excluding the ‘EggMass’ level. 
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+
+ggplot(data = frogs_grouped, aes(x = as.factor(year), y = counts, fill=amphibian_life_stage))+
+  facet_wrap(~amphibian_life_stage)+
+  geom_histogram(stat = "identity", width = 0.7, show.legend = FALSE)+
+  scale_y_continuous(expand = c(0,0))+
+  theme_minimal()+
+  labs(x = "Year",
+       y = "Frog Counts",
+       title = "Total Mountain Yellow-Legged Frog Count, by Life Stage from 1995 - 2002")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
