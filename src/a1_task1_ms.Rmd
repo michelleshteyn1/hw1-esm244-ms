@@ -31,10 +31,10 @@ library(lubridate)
 
 frogs <- read_excel(here("data","sierra_amphibians.xlsx")) %>% 
   mutate(survey_date = ymd(survey_date)) %>% # Convert date to a stored date class
-  mutate(year = year(survey_date)) 
+  mutate(year = year(survey_date)) # Create a new column which extracts year
 
 frogs_grouped <- frogs %>% 
-  filter(amphibian_life_stage != "EggMass") %>%  #Exclude 'Eggmass' observations
+  filter(amphibian_life_stage != "EggMass") %>%  #Exclude 'EggMass' observations
   group_by(year, amphibian_life_stage) %>% # Group by year and life stage
   summarize(counts = n()) #Find total counts of frogs in all life stages excluding 'EggMass'
 ```
@@ -45,20 +45,45 @@ Below, I will create a graph of total mountain yellow-legged frog (Rana muscosa)
 
 ```{r, echo=FALSE,message=FALSE,warning=FALSE}
 
-ggplot(data = frogs_grouped, aes(x = as.factor(year), y = counts, fill=amphibian_life_stage))+
+plot_a <- ggplot(data = frogs_grouped, aes(x = as.factor(year), y = counts, fill=amphibian_life_stage))+
   facet_wrap(~amphibian_life_stage)+
   geom_histogram(stat = "identity", width = 0.7, show.legend = FALSE)+
   scale_y_continuous(expand = c(0,0))+
   theme_minimal()+
   labs(x = "Year",
-       y = "Frog Counts",
+       y = "Frog Count",
        title = "Total Mountain Yellow-Legged Frog Count, by Life Stage from 1995 - 2002")
 
-
-
+plot_a
 ```
 
 
+## Graph 2
+
+Below, I will create a column graph containing containing total counts (over all years of the study) of combined adult and subadult endangered mountain yellow-legged frogs observed in the 5 lakes with the greatest total observed counts. 
+
+```{r, warning=FALSE,echo=FALSE,message=FALSE}
+top_5_frog <- frogs %>% 
+  filter(amphibian_life_stage %in% c("Adult","SubAdult")) %>% # Exclude tadpoles
+  mutate(lake_id_txt = sub("","Lake ", lake_id)) %>% # Create a new column which adds 'Lake' in front of lake id number
+  mutate(lake_id_txt = fct_reorder(lake_id_txt, lake_id)) %>% 
+  count(lake_id_txt) %>% # Get counts of total frog in each lake
+  rename(frog_count = n) %>%  # Call that column 'frog_count'
+  relocate(frog_count) %>% # Change the location of that columns
+  slice_max(frog_count, n = 5)  # Keep the 5 Lakes with greatest observed total frog counts
+
+
+plot_b <- ggplot(data = top_5_frog, aes(x = fct_reorder(lake_id_txt,frog_count), y = frog_count)) +
+  geom_col(width = 0.7, fill = "steelblue") +
+  labs(y = "Frog Count", x = "Lake ID", title = "Top 5 Adult Frog Counts from 8 Lakes") +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.title.y = element_blank())+
+  scale_y_continuous(expand = c(0,0))
+
+plot_b
+
+```
 
 
 
