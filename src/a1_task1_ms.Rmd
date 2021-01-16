@@ -6,11 +6,11 @@ output: html_document
 ---
 
 # Overview
-For Task 1, I will explore amphibian abundance data recorded by the Sierra Lakes Inventory Project (SLIP). I will:
+For Task 1, I will explore amphibian abundance data collected by Dr. Knapp and colleagues (2020) and recorded by the Sierra Lakes Inventory Project (SLIP). I will:
 
 - Read in data in a .xlsx file
 - Do some wrangling
-- Create two visualizations and put them together in a finalized compound figure. 
+- Create two visualizations and put them together in a finalized compound figure 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -26,9 +26,8 @@ library(lubridate)
 
 
 
-```{r, include=FALSE}
+```{r, warning=FALSE,message=FALSE}
 # Read in a .xlsx file, do some wrangling
-
 frogs <- read_excel(here("data","sierra_amphibians.xlsx")) %>% 
   mutate(survey_date = ymd(survey_date)) %>% # Convert date to a stored date class
   mutate(year = year(survey_date)) # Create a new column which extracts year
@@ -39,12 +38,11 @@ frogs_grouped <- frogs %>%
   summarize(counts = n()) #Find total counts of frogs in all life stages excluding 'EggMass'
 ```
 
-## Graph 1
+## Graph 1 
 
 Below, I will create a graph of total mountain yellow-legged frog (Rana muscosa) count each year across all water bodies, by life stage excluding the ‘EggMass’ level. 
 
-```{r, echo=FALSE,message=FALSE,warning=FALSE}
-
+```{r, warning=FALSE,message=FALSE}
 plot_a <- ggplot(data = frogs_grouped, aes(x = as.factor(year), y = counts, fill=amphibian_life_stage))+
   facet_wrap(~amphibian_life_stage)+
   geom_histogram(stat = "identity", width = 0.7, show.legend = FALSE)+
@@ -52,17 +50,17 @@ plot_a <- ggplot(data = frogs_grouped, aes(x = as.factor(year), y = counts, fill
   theme_minimal()+
   labs(x = "Year",
        y = "Frog Count",
-       title = "Total Mountain Yellow-Legged Frog Count, by Life Stage from 1995 - 2002")
+       title = "Total Frog Counts, by Life Stage from 1995 - 2002")
 
 plot_a
 ```
 
-
 ## Graph 2
 
-Below, I will create a column graph containing containing total counts (over all years of the study) of combined adult and subadult endangered mountain yellow-legged frogs observed in the 5 lakes with the greatest total observed counts. 
+Below, I will create a column graph containing total counts (over all years of the study) of combined adult and sub-adult endangered mountain yellow-legged frogs observed in the 8 lakes with the greatest total observed counts.
 
-```{r, warning=FALSE,echo=FALSE,message=FALSE}
+
+```{r, warning=FALSE,message=FALSE}
 top_5_frog <- frogs %>% 
   filter(amphibian_life_stage %in% c("Adult","SubAdult")) %>% # Exclude tadpoles
   mutate(lake_id_txt = sub("","Lake ", lake_id)) %>% # Create a new column which adds 'Lake' in front of lake id number
@@ -72,18 +70,33 @@ top_5_frog <- frogs %>%
   relocate(frog_count) %>% # Change the location of that columns
   slice_max(frog_count, n = 5)  # Keep the 5 Lakes with greatest observed total frog counts
 
-
 plot_b <- ggplot(data = top_5_frog, aes(x = fct_reorder(lake_id_txt,frog_count), y = frog_count)) +
   geom_col(width = 0.7, fill = "steelblue") +
-  labs(y = "Frog Count", x = "Lake ID", title = "Top 5 Adult Frog Counts from 8 Lakes") +
+  labs(y = "Frog Count", x = "Lake ID", title = "Top 5 Combined Adult and SubAdult Frog Counts from 8 Lakes") +
   coord_flip() +
   theme_minimal() +
   theme(axis.title.y = element_blank())+
   scale_y_continuous(expand = c(0,0))
 
 plot_b
+```
+
+## Compound Figure
+
+Below, I will combine Graph 1 and Graph 2 into a compound figure using the `patchwork` package.
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+
+plot_a / plot_b
 
 ```
+
+**Figure 1**. This figure contains two graphs of total mountain yellow-legged frogs (*Rana muscosa*): total frog counts by life stage from 1995 to 2002 (top) and top 5 total frog counts of combined adult and sub-adults from the 8 lakes with the greatest observed counts (bottom).This data was recorded by the Sierra Lakes Inventory Project, which ran from 1995-2002 and surveyed aquatic communities for over 8,000 water bodies in the southern Sierra Nevada.
+
+## Data Citation
+Knapp, R.A., C. Pavelka, E.E. Hegeman, and T.C. Smith. 2020. The Sierra Lakes Inventory Project: Non-Native fish and community composition of lakes and ponds in the Sierra Nevada, California ver 2. Environmental Data Initiative. https://doi.org/10.6073/pasta/d835832d7fd00d9e4466e44eea87fab3
+
+Click [here](https://drive.google.com/file/d/1OpvnYG2tQ8WfiLKzloeZZD5vtl7wNAdG/view) to download the data. 
 
 
 
