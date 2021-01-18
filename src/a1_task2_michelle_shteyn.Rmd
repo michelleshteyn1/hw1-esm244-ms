@@ -1,0 +1,70 @@
+---
+title: 'Task 2: Principle Components Analysis'
+author: "Michelle Shteyn"
+date: "1/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggfortify) # For PCA biplot
+```
+
+# Overview
+
+In this report, I will explore miscellaneous environmental and climactic variables at the country-level, compiled and provided by @zander_venter on Kaggle. For each country, the mean of each variable is calculated at a reduction scale of approximately 10km. This data can be found on [Google Earth Engine](https://earthengine.google.com/), along with other publicly available datasets acquired through remote sensing methods. Below, I conduct principal components analysis to explore multivariate relationships in the climactic data in a simplified number of dimensions.
+
+
+#### Principal Components Analysis
+
+Below, I explore variable relationships across 188 countries in a PCA biplot. 
+
+```{r, warning=FALSE,message=FALSE}
+
+#Read in data
+world_env <- read_csv(here("data","world_env_vars.csv"))
+
+#Do some wrangling and run PCA
+world_env_pca <- world_env %>% 
+  clean_names() %>% 
+  select(-country) %>%   #Drop country from the PCA since this is not a numeric variable and can't be scaled
+  tidyr::drop_na() %>% # Want to drop na's since this is a multivariate analysis
+  scale() %>% # Set them all to the same scale so that some variables are not weighted more than others
+  prcomp()
+
+#Have to make a dataset where the observations that exist match the obs that were used to create the PCA biplot, but still contain the other variables. Those are good to have because we can use other variables to update the aesthetics of the autoplot.
+world_env_complete <- world_env %>% 
+  drop_na()
+
+#autoplot recognizes the type of data I am giving this, and assumes the type of output I want to create
+autoplot(world_env_pca,
+         data = world_env_complete,
+         loadings = TRUE,
+         loadings.label = TRUE,
+         loadings.colour = "black",
+         loadings.label.colour = "black",
+         loadings.label.vjust = -0.5)+
+scale_color_brewer()+
+  scale_fill_brewer()+
+  theme_minimal()
+
+# Variance explained by each PC
+screeplot(world_env_pca, type = "lines") #Around 70%
+
+# See the loadings (weighting for each principal component)
+world_env_pca$rotation
+```
+We have 63.31% of the data captured in this PCA biplot.
+
+
+
+
+
+
+
+
+
