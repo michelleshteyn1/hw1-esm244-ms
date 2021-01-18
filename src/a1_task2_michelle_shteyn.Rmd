@@ -1,0 +1,76 @@
+---
+title: 'Task 2: Principle Components Analysis'
+author: "Michelle Shteyn"
+date: "1/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggfortify) # For PCA biplot
+```
+
+# Overview
+
+In this report, I will explore miscellaneous environmental and climactic variables at the country-level, compiled and provided by @zander_venter on Kaggle. For each country, the mean of each variable is calculated at a reduction scale of approximately 10km. This data can be found on [Google Earth Engine](https://earthengine.google.com/), along with other publicly available datasets acquired through remote sensing methods. Below, I conduct principal components analysis to explore multivariate relationships in the climactic data in a simplified number of dimensions.
+
+
+# Principal Components Analysis
+
+In this analysis, I explore variable relationships across 188 countries in a PCA biplot. I will only examine the following variables: accessibility_to_cities, elevation, slope, cropland_cover, tree_canopy_cover, temp_mean_annual, wind, and cloudiness.
+
+```{r, warning=FALSE,message=FALSE, fig.cap="**Figure 1.** PCA biplot of 8 world environmental variables (accessibility_to_cities, elevation, slope, cropland_cover, tree_canopy_cover, temp_mean_annual, wind, and cloudiness) from 188 countries. Data source: @zander_venter, through Google Earth Engine."}
+
+#Read in data
+world_env <- read_csv(here("data","world_env_vars.csv"))
+
+#Do some wrangling and run PCA
+world_env_pca <- world_env %>% 
+  clean_names() %>% 
+  select(accessibility_to_cities, elevation, slope, cropland_cover, tree_canopy_cover, temp_mean_annual, wind, cloudiness) %>%   
+  tidyr::drop_na() %>% # Want to drop na's since this is a multivariate analysis
+  scale() %>% # Set them all to the same scale so that some variables are not weighted more than others
+  prcomp()
+
+#Have to make a dataset where the observations that exist match the obs that were used to create the PCA biplot, but still contain the other variables. Those are good to have because we can use other variables to update the aesthetics of the autoplot.
+world_env_complete <- world_env %>% 
+  drop_na()
+
+#autoplot recognizes the type of data I am giving this, and assumes the type of output I want to create
+autoplot(world_env_pca,
+         data = world_env_complete,
+         loadings = TRUE,
+         loadings.label = TRUE,
+         loadings.colour = "red",
+         loadings.label.colour = "black",
+         loadings.label.vjust = -0.5)+
+scale_color_brewer()+
+  scale_fill_brewer()+
+  theme_minimal()+
+  labs(title = "PCA of 8 World Environmental Variables, 188 Countries")
+```
+
+# Key Takeaways
+
+This biplot helps us to understanding clustering of multivariate observations in just two dimensions. Results indicate:
+
+- 48.48% of the data is captured in this PCA biplot.
+- 'tree_canopy' and 'cloudiness' are highly positively correlated. 
+- 'cloudiness' and 'wind' are negatively correlated.
+- 'elevation' and 'slope' are minimally coorelated with 'tree_canopy_cover'
+- There appears to be clustering (a group of observations that are similar overall in multivariate space) in Quadrant II of the biplot.
+
+
+
+
+
+
+
+
+
+
+
